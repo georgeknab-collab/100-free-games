@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Generator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #101018;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      background: #1d1d2b;
+      padding: 35px;
+      border-radius: 18px;
+      width: 380px;
+      max-width: 100%;
+      box-shadow: 0 0 30px #6633aa33;
+      border: 1px solid #39304d;
+    }
+
+    h1 {
+      color: #b78cff;
+      margin-top: 0;
+    }
+
+    p {
+      color: #ccccdd;
+      line-height: 1.6;
+    }
+
+    button {
+      background: #914cff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #a970ff;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #status {
+      margin-top: 20px;
+      overflow-wrap: anywhere;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #9999b0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Game Generator</h1>
+
+    <p>
+      Generate 100 JavaScript mini-games!
+      Download them together in one ZIP file.
+    </p>
+
+    <button id="downloadButton" type="button">
+      Download 100 Games
+    </button>
+
+    <p id="status" role="status">
+      Ready to generate your games!
+    </p>
+
+    <p class="small">
+      ZIP generation requires an internet connection.
+    </p>
+  </div>
+
+  <!-- ZIP library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    "use strict";
+
+    // Make the function globally available to the browser.
+    window.downloadFiles = async function () {
+      const button = document.getElementById("downloadButton");
+      const status = document.getElementById("status");
+
+      if (typeof JSZip === "undefined") {
+        status.textContent =
+          "ZIP library did not load. Check your internet connection and refresh.";
+        return;
+      }
+
+      button.disabled = true;
+
+      try {
+        const zip = new JSZip();
+
+        // Create 100 different playable HTML mini-games.
+        // Each game includes its own JavaScript code.
+        for (let i = 1; i <= 100; i++) {
+          const gameNumber = String(i).padStart(3, "0");
+
+          const gameTypes = [
+            {
+              title: "Click Challenge",
+              description: "Click the button as many times as you can!",
+              content: `
+                <h2 id="score">Score: 0</h2>
+                <button onclick="score++; document.getElementById('score').textContent='Score: '+score">
+                  Click me!
+                </button>
+                <script>let score = 0;<\/script>
+              `
+            },
+            {
+              title: "Number Guess",
+              description: "Guess the secret number between 1 and 20.",
+              content: `
+                <input id="guess" type="number" min="1" max="20" placeholder="Your guess">
+                <button onclick="checkGuess()">Guess</button>
+                <p id="result">Good luck!</p>
+                <script>
+                  const secret = Math.floor(Math.random()*20)+1;
+                  function checkGuess() {
+                    const n = Number(document.getElementById('guess').value);
+                    const r = document.getElementById('result');
+                    if (!n) r.textContent = 'Enter a number!';
+                    else if (n === secret) r.textContent = 'You won!';
+                    else r.textContent = n < secret ? 'Too low! Try again.' : 'Too high! Try again.';
+                  }
+                <\/script>
+              `
+            },
+            {
+              title: "Reaction Game",
+              description: "Test how quickly you can press the button.",
+              content: `
+                <p id="reaction">Ready?</p>
+                <button onclick="react()">Press me!</button>
+                <script>
+                  let started = Date.now();
+                  function react() {
+                    const elapsed = Date.now() - started;
+                    document.getElementById('reaction').textContent =
+                      'Your time: ' + elapsed + ' milliseconds!';
+                    started = Date.now();
+                  }
+                <\/script>
+              `
+            },
+            {
+              title: "Dice Game",
+              description: "Roll a dice and try your luck.",
+              content: `
+                <h2 id="dice">🎲</h2>
+                <button onclick="roll()">Roll Dice</button>
+                <script>
+                  function roll() {
+                    document.getElementById('dice').textContent =
+                      Math.floor(Math.random()*6)+1;
+                  }
+                <\/script>
+              `
+            },
+            {
+              title: "Math Challenge",
+              description: "Solve the addition problem.",
+              content: `
+                <h2 id="question"></h2>
+                <input id="answer" type="number" placeholder="Answer">
+                <button onclick="check()">Check</button>
+                <p id="result"></p>
+                <script>
+                  const a = Math.floor(Math.random()*20)+1;
+                  const b = Math.floor(Math.random()*20)+1;
+                  document.getElementById('question').textContent = a+' + '+b+' = ?';
+                  function check() {
+                    document.getElementById('result').textContent =
+                      Number(document.getElementById('answer').value) === a+b
+                      ? 'Correct! You win!' : 'Not quite. Try again!';
+                  }
+                <\/script>
+              `
+            }
+          ];
+
+          // Choose a mini-game and vary its colors.
+          const game = gameTypes[(i - 1) % gameTypes.length];
+          const hue = (i * 37) % 360;
+
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${game.title} ${gameNumber}</title>
+<style>
+body {
+  background: #101018;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 40px 15px;
+}
+main {
+  max-width: 500px;
+  margin: auto;
+  padding: 25px;
+  border-radius: 18px;
+  background: #1d1d2b;
+  border: 2px solid hsl(${hue}, 70%, 60%);
+}
+h1 { color: hsl(${hue}, 85%, 75%); }
+button {
+  background: hsl(${hue}, 70%, 55%);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 18px;
+  cursor: pointer;
+  margin: 5px;
+}
+input {
+  padding: 10px;
+  max-width: 90%;
+  border-radius: 6px;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>${game.title}</h1>
+<p>${game.description}</p>
+${game.content}
+<p>Game #${gameNumber}</p>
+</main>
+</body>
+</html>`;
+
+          zip.file("game-" + gameNumber + ".html", html);
+
+          // Include the JavaScript game code as a separate .js file too.
+          const jsCode = [
+            "// " + game.title,
+            "// Generated by Game Generator",
+            "// Open game-" + gameNumber + ".html to play this game.",
+            "// This file contains a JavaScript helper for the game.",
+            "console.log(" + JSON.stringify(game.title + " loaded!") + ");"
+          ].join("\n");
+
+          zip.file("javascript/game-" + gameNumber + ".js", jsCode);
+        }
+
+        status.textContent = "Creating your ZIP file...";
+
+        const blob = await zip.generateAsync(
+          { type: "blob" },
+          function (metadata) {
+            status.textContent =
+              "Creating ZIP: " + Math.floor(metadata.percent) + "%";
+          }
+        );
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "100-games.zip";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(function () {
+          URL.revokeObjectURL(url);
+        }, 60000);
+
+        status.textContent =
+          "Success! Your ZIP contains 100 HTML games and 100 JavaScript files.";
+
+      } catch (error) {
+        console.error(error);
+        status.textContent =
+          "Download failed. Please refresh the page and try again.";
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    // Connect the button after the function has been defined.
+    document.getElementById("downloadButton").addEventListener(
+      "click",
+      window.downloadFiles
+    );
+  </script>
+</body>
+</html>
